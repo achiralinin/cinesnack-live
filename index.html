@@ -406,7 +406,7 @@ function showPay(){
   window.scrollTo(0,0);
 }
 const slipFile=document.getElementById("slipFile");
-document.getElementById("uplLabel").onclick=()=>slipFile.click();
+// เปิดหน้าต่างเลือกไฟล์ผ่าน <label for="slipFile"> อยู่แล้ว — ไม่ต้องสั่ง .click() ซ้ำ (กันเด้งซ้อน 2 รอบบนมือถือ)
 slipFile.onchange=()=>{
   const file=slipFile.files[0]; if(!file) return;
   const img=new Image(); const rd=new FileReader();
