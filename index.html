@@ -466,7 +466,7 @@ const STEPS=[
   {k:"ready", t:"พร้อมรับที่เคาน์เตอร์"},
   {k:"done", t:"รับของเรียบร้อย"}
 ];
-const ORDERIDX={new:0,confirmed:1,ready:2,done:3,rejected:-1};
+const ORDERIDX={new:0,confirmed:1,ready:2,picked:3,done:3,rejected:-1};  // picked=ลูกค้ารับแล้ว, done=เคาน์เตอร์ปิดบิล(ลง POS) — ฝั่งลูกค้าถือว่าจบเหมือนกัน
 function trackOrder(id, orderNo){
   document.getElementById("payView").classList.add("hidden");
   document.getElementById("trackView").classList.remove("hidden");
@@ -478,7 +478,7 @@ function trackOrder(id, orderNo){
     const msg=document.getElementById("trackMsg"), icon=document.getElementById("trackIcon");
     if(st==="rejected"){ icon.textContent="!"; icon.style.background="#FEE2E2"; icon.style.color="#DC2626"; msg.textContent="สลิปไม่ผ่านการตรวจสอบ กรุณาติดต่อเคาน์เตอร์"; }
     else if(st==="ready"){ icon.textContent="🛎️"; msg.textContent="ออเดอร์พร้อมแล้ว! แสดงหน้านี้ที่เคาน์เตอร์เพื่อรับของ"; }
-    else if(st==="done"){ icon.textContent="✓"; icon.style.background="#DCFCE7"; icon.style.color="#16A34A"; msg.textContent="ขอบคุณที่ใช้บริการ 🎬"; }
+    else if(st==="picked"||st==="done"){ icon.textContent="✓"; icon.style.background="#DCFCE7"; icon.style.color="#16A34A"; msg.textContent="ขอบคุณที่ใช้บริการ 🎬"; }
     else if(st==="confirmed"){ msg.textContent="เคาน์เตอร์กำลังจัดออเดอร์ให้คุณ"; }
     else { msg.textContent="กำลังรอเคาน์เตอร์ตรวจสลิป..."; }
   });

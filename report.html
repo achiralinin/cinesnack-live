@@ -33,7 +33,8 @@
   .items .op{color:var(--muted);font-size:12px}
   .st{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
   .st.new{background:#FEF3C7;color:#92400E} .st.confirmed{background:#DBEAFE;color:#1E40AF}
-  .st.ready{background:#D1FAE5;color:#065F46} .st.done{background:#DCFCE7;color:#166534}
+  .st.ready{background:#D1FAE5;color:#065F46} .st.picked{background:#E0E7FF;color:#3730A3} .st.done{background:#DCFCE7;color:#166534}
+  .st.waitpos{background:#FEF3C7;color:#92400E}
   .st.rejected{background:#FEE2E2;color:#991B1B}
   tr.rej td{opacity:.5}
   .totrow td{font-weight:800;font-size:15px;background:#FAFBFE;border-top:2px solid var(--line)}
@@ -45,7 +46,7 @@
 </style>
 </head>
 <body>
-<h1>📊 CineSnack — สรุปยอดขาย <small>หลังบ้าน · กระทบยอดกับ POS</small></h1>
+<h1>📊 CineSnack — สรุปยอดขาย <small>สำหรับผู้บริหาร · ดูอย่างเดียว</small></h1>
 
 <div id="root">
   <div class="datebar">
@@ -61,7 +62,7 @@
   <div class="sec">
     <h2>รายการออเดอร์ <span class="pill" id="ordPill"></span></h2>
     <div style="overflow-x:auto"><table id="ordTable"></table></div>
-    <div class="note" style="padding:10px 16px">ติ๊ก ✓ ช่อง "ลง POS" เมื่อคีย์ออเดอร์นั้นเข้าระบบ POS แล้ว — สถานะถูกบันทึกอัตโนมัติ ใช้เช็คว่าคีย์ครบทุกบิล (นับเฉพาะบิลที่ยืนยันการชำระแล้ว)</div>
+    <div class="note" style="padding:10px 16px">หน้านี้ดูอย่างเดียว (สำหรับผู้บริหาร) — สถานะ "ลง POS" อัปเดตอัตโนมัติจากหน้าเคาน์เตอร์ตอนพนักงานปิดบิล · นับยอดเฉพาะบิลที่ยืนยันการชำระแล้ว</div>
   </div>
 
   <div class="sec">
@@ -72,7 +73,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ใช้ค่าเดียวกับ index.html / counter.html */
 const firebaseConfig = {
@@ -84,8 +85,8 @@ const firebaseConfig = {
   appId: "1:903716246233:web:49691e460517f3986f64c8"
 };
 
-const PAID = ["confirmed","ready","done"];   // นับเป็นยอดขาย (ยืนยันชำระแล้ว)
-const ST_LABEL = { new:"รอยืนยัน", confirmed:"กำลังจัด", ready:"พร้อมรับ", done:"รับแล้ว", rejected:"ปฏิเสธ" };
+const PAID = ["confirmed","ready","picked","done"];   // นับเป็นยอดขาย (ยืนยันชำระแล้ว)
+const ST_LABEL = { new:"รอยืนยัน", confirmed:"กำลังจัด", ready:"พร้อมรับ", picked:"รับแล้ว", done:"ปิดบิล", rejected:"ปฏิเสธ" };
 const baht = n => "฿" + Number(n||0).toLocaleString();
 
 if(firebaseConfig.apiKey.startsWith("PASTE")){
@@ -138,13 +139,12 @@ if(firebaseConfig.apiKey.startsWith("PASTE")){
         <td class="items">${itemsHtml(r)}</td>
         <td class="num">${baht(r.total)}</td>
         <td class="ctr"><span class="st ${r.status}">${ST_LABEL[r.status]||r.status}</span></td>
-        <td class="ctr">${canKey?`<input type="checkbox" class="poschk" data-id="${r.id}" ${r.posKeyed?"checked":""}>`:"—"}</td>
+        <td class="ctr">${r.posKeyed?'<span class="st done">✓ ลงแล้ว</span>':(canKey?'<span class="st waitpos">รอลง POS</span>':"—")}</td>
       </tr>`;
     });
     body += `<tr class="totrow"><td colspan="3">รวมยอดขาย (ชำระแล้ว)</td><td class="num">${baht(sales)}</td><td colspan="2" class="ctr">${keyed.length}/${paid.length} ลง POS</td></tr>`;
     body += `</tbody>`;
     $("ordTable").innerHTML = body;
-    $("ordTable").querySelectorAll(".poschk").forEach(c=>c.onchange=()=>updateDoc(doc(db,"orders",c.dataset.id),{posKeyed:c.checked}));
 
     // item summary (paid only)
     const agg = {};
