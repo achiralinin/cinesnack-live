@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CineSnack — สรุปยอดขาย (หลังบ้าน)</title>
+<style>
+  :root{ --blue:#2563EB; --blue-d:#1D4ED8; --bg:#F5F7FB; --ink:#0F172A; --muted:#64748B; --line:#E5E9F0; --green:#16A34A; --amber:#D97706; --red:#DC2626; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Sukhumvit Set","Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink);padding:18px;max-width:1100px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;color:var(--blue);display:flex;align-items:center;gap:8px}
+  h1 small{font-size:13px;font-weight:500;color:var(--muted)}
+  .datebar{display:flex;align-items:center;gap:10px;margin:16px 0;flex-wrap:wrap}
+  .datebar button{height:40px;padding:0 14px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  .datebar .day{font-size:16px;font-weight:700;min-width:200px;text-align:center}
+  .datebar input[type=date]{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-family:inherit;font-size:14px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .c{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .c .lab{font-size:12px;color:var(--muted);font-weight:600}
+  .c .val{font-size:26px;font-weight:800;margin-top:4px}
+  .c .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .c.green .val{color:var(--green)} .c.amber .val{color:var(--amber)}
+  .sec{background:#fff;border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden;margin-bottom:18px}
+  .sec h2{font-size:15px;font-weight:700;padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+  .sec h2 .pill{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:600;background:#FAFBFE;position:sticky;top:0}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  td.ctr,th.ctr{text-align:center}
+  .qno{font-weight:800;font-size:15px}
+  .items{font-size:13px;color:#334155;line-height:1.5}
+  .items .op{color:var(--muted);font-size:12px}
+  .st{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+  .st.new{background:#FEF3C7;color:#92400E} .st.confirmed{background:#DBEAFE;color:#1E40AF}
+  .st.ready{background:#D1FAE5;color:#065F46} .st.done{background:#DCFCE7;color:#166534}
+  .st.rejected{background:#FEE2E2;color:#991B1B}
+  tr.rej td{opacity:.5}
+  .totrow td{font-weight:800;font-size:15px;background:#FAFBFE;border-top:2px solid var(--line)}
+  .poschk{width:20px;height:20px;cursor:pointer;accent-color:var(--green)}
+  .empty{padding:30px;text-align:center;color:var(--muted)}
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+  .setup{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:12px;padding:16px;line-height:1.6}
+  @media(max-width:560px){ .hidesm{display:none} body{padding:12px} }
+</style>
+</head>
+<body>
+<h1>📊 CineSnack — สรุปยอดขาย <small>หลังบ้าน · กระทบยอดกับ POS</small></h1>
+
+<div id="root">
+  <div class="datebar">
+    <button id="prevDay">‹ ก่อนหน้า</button>
+    <div class="day" id="dayLabel">—</div>
+    <button id="nextDay">ถัดไป ›</button>
+    <input type="date" id="datePick">
+    <button id="todayBtn">วันนี้</button>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="sec">
+    <h2>รายการออเดอร์ <span class="pill" id="ordPill"></span></h2>
+    <div style="overflow-x:auto"><table id="ordTable"></table></div>
+    <div class="note" style="padding:10px 16px">ติ๊ก ✓ ช่อง "ลง POS" เมื่อคีย์ออเดอร์นั้นเข้าระบบ POS แล้ว — สถานะถูกบันทึกอัตโนมัติ ใช้เช็คว่าคีย์ครบทุกบิล (นับเฉพาะบิลที่ยืนยันการชำระแล้ว)</div>
+  </div>
+
+  <div class="sec">
+    <h2>สรุปจำนวนสินค้าที่ขายได้ <span class="pill">เฉพาะบิลที่ชำระแล้ว · ไว้เทียบสต็อก</span></h2>
+    <div style="overflow-x:auto"><table id="itemTable"></table></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ใช้ค่าเดียวกับ index.html / counter.html */
+const firebaseConfig = {
+  apiKey: "AIzaSyBCjzGpHTk4WrEB5Fdi9u5124_DGHiu-PM",
+  authDomain: "cinesnack-f7aef.firebaseapp.com",
+  projectId: "cinesnack-f7aef",
+  storageBucket: "cinesnack-f7aef.firebasestorage.app",
+  messagingSenderId: "903716246233",
+  appId: "1:903716246233:web:49691e460517f3986f64c8"
+};
+
+const PAID = ["confirmed","ready","done"];   // นับเป็นยอดขาย (ยืนยันชำระแล้ว)
+const ST_LABEL = { new:"รอยืนยัน", confirmed:"กำลังจัด", ready:"พร้อมรับ", done:"รับแล้ว", rejected:"ปฏิเสธ" };
+const baht = n => "฿" + Number(n||0).toLocaleString();
+
+if(firebaseConfig.apiKey.startsWith("PASTE")){
+  document.getElementById("root").innerHTML = '<div class="setup"><b>ยังไม่ได้ตั้งค่า Firebase</b> — วาง firebaseConfig ชุดเดียวกับไฟล์อื่นก่อน</div>';
+}else{
+  const db = getFirestore(initializeApp(firebaseConfig));
+  const $ = id => document.getElementById(id);
+  let sel = new Date(); sel.setHours(0,0,0,0);
+  let unsub = null;
+
+  function fmtDay(d){ return d.toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
+  function fmtTime(ts){ try{ return ts.toDate().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}); }catch(e){ return "—"; } }
+  function isToday(d){ const t=new Date(); t.setHours(0,0,0,0); return d.getTime()===t.getTime(); }
+  function toInput(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+  function load(){
+    if(unsub) unsub();
+    $("dayLabel").textContent = fmtDay(sel) + (isToday(sel)?" (วันนี้)":"");
+    $("datePick").value = toInput(sel);
+    const start = new Date(sel), end = new Date(sel); end.setDate(end.getDate()+1);
+    const q = query(collection(db,"orders"), where("createdAt",">=",start), where("createdAt","<",end), orderBy("createdAt","asc"));
+    unsub = onSnapshot(q, snap=>{
+      const rows=[]; snap.forEach(d=>rows.push({id:d.id, ...d.data()}));
+      render(rows);
+    }, err=>{ $("cards").innerHTML = '<div class="setup">โหลดข้อมูลไม่ได้: '+err.message+'</div>'; });
+  }
+
+  function render(rows){
+    const paid = rows.filter(r=>PAID.includes(r.status));
+    const sales = paid.reduce((s,r)=>s+(r.total||0),0);
+    const keyed = paid.filter(r=>r.posKeyed);
+    const notKeyedAmt = paid.filter(r=>!r.posKeyed).reduce((s,r)=>s+(r.total||0),0);
+    const pending = rows.filter(r=>r.status==="new");
+
+    $("cards").innerHTML = `
+      <div class="c green"><div class="lab">ยอดขาย (ชำระแล้ว)</div><div class="val">${baht(sales)}</div><div class="sub">${paid.length} บิล</div></div>
+      <div class="c"><div class="lab">เฉลี่ย/บิล</div><div class="val">${baht(paid.length?Math.round(sales/paid.length):0)}</div></div>
+      <div class="c amber"><div class="lab">ยังไม่ลง POS</div><div class="val">${paid.length-keyed.length}</div><div class="sub">${baht(notKeyedAmt)} · ลงแล้ว ${keyed.length}/${paid.length}</div></div>
+      <div class="c"><div class="lab">รอยืนยันสลิป</div><div class="val">${pending.length}</div><div class="sub">${baht(pending.reduce((s,r)=>s+(r.total||0),0))}</div></div>`;
+
+    $("ordPill").textContent = rows.length + " รายการ";
+    const itemsHtml = r => r.items.map(i=>`${i.qty}× ${i.name}${i.optLabel?` <span class="op">(${i.optLabel})</span>`:""}`).join("<br>");
+    let body = `<thead><tr><th>เวลา</th><th>คิว</th><th>รายการ</th><th class="num">ยอด</th><th class="ctr">สถานะ</th><th class="ctr">ลง POS</th></tr></thead><tbody>`;
+    if(!rows.length){ body += `<tr><td colspan="6"><div class="empty">— ยังไม่มีออเดอร์ในวันนี้ —</div></td></tr>`; }
+    rows.forEach(r=>{
+      const canKey = PAID.includes(r.status);
+      body += `<tr class="${r.status==='rejected'?'rej':''}">
+        <td>${fmtTime(r.createdAt)}</td>
+        <td><span class="qno">#${r.orderNo||"-"}</span></td>
+        <td class="items">${itemsHtml(r)}</td>
+        <td class="num">${baht(r.total)}</td>
+        <td class="ctr"><span class="st ${r.status}">${ST_LABEL[r.status]||r.status}</span></td>
+        <td class="ctr">${canKey?`<input type="checkbox" class="poschk" data-id="${r.id}" ${r.posKeyed?"checked":""}>`:"—"}</td>
+      </tr>`;
+    });
+    body += `<tr class="totrow"><td colspan="3">รวมยอดขาย (ชำระแล้ว)</td><td class="num">${baht(sales)}</td><td colspan="2" class="ctr">${keyed.length}/${paid.length} ลง POS</td></tr>`;
+    body += `</tbody>`;
+    $("ordTable").innerHTML = body;
+    $("ordTable").querySelectorAll(".poschk").forEach(c=>c.onchange=()=>updateDoc(doc(db,"orders",c.dataset.id),{posKeyed:c.checked}));
+
+    // item summary (paid only)
+    const agg = {};
+    paid.forEach(r=>r.items.forEach(i=>{ const k=i.name; if(!agg[k])agg[k]={qty:0,amt:0}; agg[k].qty+=i.qty; agg[k].amt+=(i.unit||0)*i.qty; }));
+    const list = Object.entries(agg).sort((a,b)=>b[1].amt-a[1].amt);
+    let it = `<thead><tr><th>สินค้า</th><th class="num">จำนวน</th><th class="num">ยอดรวม</th></tr></thead><tbody>`;
+    if(!list.length){ it += `<tr><td colspan="3"><div class="empty">—</div></td></tr>`; }
+    list.forEach(([n,v])=>{ it += `<tr><td>${n}</td><td class="num">${v.qty}</td><td class="num">${baht(v.amt)}</td></tr>`; });
+    it += `</tbody>`;
+    $("itemTable").innerHTML = it;
+  }
+
+  $("prevDay").onclick = ()=>{ sel.setDate(sel.getDate()-1); load(); };
+  $("nextDay").onclick = ()=>{ sel.setDate(sel.getDate()+1); load(); };
+  $("todayBtn").onclick = ()=>{ sel=new Date(); sel.setHours(0,0,0,0); load(); };
+  $("datePick").onchange = e=>{ const [y,m,d]=e.target.value.split("-").map(Number); sel=new Date(y,m-1,d); sel.setHours(0,0,0,0); load(); };
+  load();
+}
+</script>
+</body>
+</html>
