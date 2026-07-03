@@ -140,7 +140,7 @@
       <div style="font-size:13px;color:var(--muted)" id="trackBranch"></div>
       <div class="steps" id="trackSteps"></div>
       <div id="trackMsg" style="font-size:14px;color:var(--muted);margin-top:8px"></div>
-      <button onclick="location.reload()" style="margin-top:24px;height:48px;padding:0 24px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">สั่งออเดอร์ใหม่</button>
+      <button onclick="__restart()" style="margin-top:24px;height:48px;padding:0 24px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">สั่งออเดอร์ใหม่</button>
     </div>
   </div>
 
@@ -454,6 +454,7 @@ async function submitOrder(){
       items:cart.map(i=>({name:i.name,optLabel:i.optLabel,unit:i.unit,qty:i.qty})),
       total:cartTotal(), slip:slipData, status:"new", createdAt:serverTimestamp()
     });
+    try{ localStorage.setItem(ORDER_KEY, JSON.stringify({id:ref.id, orderNo, ts:Date.now()})); }catch(e){}
     document.getElementById("submitBar").remove();
     trackOrder(ref.id, orderNo);
   }catch(err){ alert("ส่งไม่สำเร็จ: "+err.message); btn.textContent="ลองอีกครั้ง"; btn.disabled=false; submitting=false; }
@@ -467,14 +468,21 @@ const STEPS=[
   {k:"done", t:"รับของเรียบร้อย"}
 ];
 const ORDERIDX={new:0,confirmed:1,ready:2,picked:3,done:3,rejected:-1};  // picked=ลูกค้ารับแล้ว, done=เคาน์เตอร์ปิดบิล(ลง POS) — ฝั่งลูกค้าถือว่าจบเหมือนกัน
+const ORDER_KEY="cinesnack_active_order";   // จำออเดอร์ล่าสุดไว้ในเครื่อง กันรีเฟรชแล้วหลุด
+window.__restart=()=>{ try{localStorage.removeItem(ORDER_KEY);}catch(e){} location.reload(); };
 function trackOrder(id, orderNo){
+  document.getElementById("menuView").classList.add("hidden");
   document.getElementById("payView").classList.add("hidden");
+  tabsEl.style.display="none"; cta.classList.remove("show");
   document.getElementById("trackView").classList.remove("hidden");
   document.getElementById("trackNo").textContent="#"+orderNo;
   document.getElementById("trackBranch").textContent=SHOP.name+" · "+SHOP.branch;
   renderSteps("new");
+  window.scrollTo(0,0);
   onSnapshot(doc(db,"orders",id),snap=>{
-    const st=snap.data()?.status||"new"; renderSteps(st);
+    if(!snap.exists()){ try{localStorage.removeItem(ORDER_KEY);}catch(e){}
+      document.getElementById("trackMsg").textContent="ไม่พบออเดอร์นี้ (อาจถูกยกเลิก) — กด “สั่งออเดอร์ใหม่”"; return; }
+    const st=snap.data().status||"new"; renderSteps(st);
     const msg=document.getElementById("trackMsg"), icon=document.getElementById("trackIcon");
     if(st==="rejected"){ icon.textContent="!"; icon.style.background="#FEE2E2"; icon.style.color="#DC2626"; msg.textContent="สลิปไม่ผ่านการตรวจสอบ กรุณาติดต่อเคาน์เตอร์"; }
     else if(st==="ready"){ icon.textContent="🛎️"; msg.textContent="ออเดอร์พร้อมแล้ว! แสดงหน้านี้ที่เคาน์เตอร์เพื่อรับของ"; }
@@ -494,6 +502,13 @@ function renderSteps(status){
 /* ---------- boot ---------- */
 ready = initFirebase();
 syncCta();
+if(ready){   // ถ้ามีออเดอร์ค้างอยู่ในเครื่อง (ยังไม่เกิน 12 ชม.) เด้งกลับหน้าติดตามอัตโนมัติ
+  try{
+    const saved=JSON.parse(localStorage.getItem(ORDER_KEY)||"null");
+    if(saved && saved.id && (Date.now()-(saved.ts||0)) < 12*3600*1000){ trackOrder(saved.id, saved.orderNo); }
+    else if(saved){ localStorage.removeItem(ORDER_KEY); }
+  }catch(e){}
+}
 </script>
 </body>
 </html>
