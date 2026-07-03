@@ -25,7 +25,7 @@
   .tab.on{color:var(--ink);border-color:var(--blue);font-weight:700}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px 130px}
   .card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
-  .card .imgwrap{position:relative;aspect-ratio:4/3;background:#EFF4FF}
+  .card .imgwrap{position:relative;aspect-ratio:1/1;background:#fff}
   .card img{width:100%;height:100%;object-fit:cover;display:block}
   .best{position:absolute;top:8px;left:8px;background:var(--yellow);color:#7A5B00;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px}
   .add{position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(37,99,235,.4);cursor:pointer}
@@ -195,16 +195,16 @@ const firebaseConfig = {
 /* ----- เมนู (สลับเป็นสินค้าจริงได้ที่นี่) ----- */
 const IMG = (t)=>`https://placehold.co/400x300/EFF4FF/2563EB?text=${encodeURIComponent(t)}`;
 const PRODUCTS = [
-  {id:"largep1", cat:"ป๊อปคอร์น", name:"Large Popcorn", desc:"ถัง 64 oz", price:130, best:true, img:IMG("Large Popcorn")},
-  {id:"extral1", cat:"ป๊อปคอร์น", name:"Extra Large Popcorn", desc:"ถัง 85 oz", price:150, best:true, img:IMG("Extra Large Popcorn")},
-  {id:"ziploc1", cat:"ป๊อปคอร์น", name:"Ziplock Large Popcorn", desc:"ซิปล็อก 64 oz", price:150, best:false, img:IMG("Ziplock Large Popcorn")},
-  {id:"ziploc2", cat:"ป๊อปคอร์น", name:"Ziplock Extra Large Popcorn", desc:"ซิปล็อก 85 oz", price:170, best:false, img:IMG("Ziplock Extra Large Popcorn")},
-  {id:"partys1", cat:"ป๊อปคอร์น", name:"Party Size Popcorn", desc:"ซิปล็อก 230 oz", price:290, best:false, img:IMG("Party Size Popcorn")},
-  {id:"superg1", cat:"ป๊อปคอร์น", name:"Super Giant Bucket", desc:"ถัง 380 oz + ฝา", price:309, best:false, img:IMG("Super Giant Bucket")},
-  {id:"2foru1", cat:"คอมโบเซ็ต", name:"2 For U", desc:"2×44oz + ป๊อปคอร์น 85oz", price:309, best:true, img:IMG("2 For U")},
-  {id:"sausag1", cat:"คอมโบเซ็ต", name:"Sausage Combo", desc:"44oz + ป๊อปคอร์น 64oz + ไส้กรอก", price:269, best:false, img:IMG("Sausage Combo")},
-  {id:"extras1", cat:"คอมโบเซ็ต", name:"Extra Sausage Combo", desc:"44oz + ป๊อปคอร์น 85oz + ไส้กรอก 2", price:309, best:false, img:IMG("Extra Sausage Combo")},
-  {id:"minico1", cat:"คอมโบเซ็ต", name:"Minicocktail Combo", desc:"44oz + ป๊อปคอร์น 85oz + มินิค็อกเทล", price:309, best:false, img:IMG("Minicocktail Combo")},
+  {id:"largep1", cat:"ป๊อปคอร์น", name:"Large Popcorn", desc:"ถัง 64 oz", price:130, best:true, img:"img/largep1.jpg"},
+  {id:"extral1", cat:"ป๊อปคอร์น", name:"Extra Large Popcorn", desc:"ถัง 85 oz", price:150, best:true, img:"img/extral1.jpg"},
+  {id:"ziploc1", cat:"ป๊อปคอร์น", name:"Ziplock Large Popcorn", desc:"ซิปล็อก 64 oz", price:150, best:false, img:"img/ziploc1.jpg"},
+  {id:"ziploc2", cat:"ป๊อปคอร์น", name:"Ziplock Extra Large Popcorn", desc:"ซิปล็อก 85 oz", price:170, best:false, img:"img/ziploc2.jpg"},
+  {id:"partys1", cat:"ป๊อปคอร์น", name:"Party Size Popcorn", desc:"ซิปล็อก 230 oz", price:290, best:false, img:"img/partys1.jpg"},
+  {id:"superg1", cat:"ป๊อปคอร์น", name:"Super Giant Bucket", desc:"ถัง 380 oz + ฝา", price:309, best:false, img:"img/superg1.jpg"},
+  {id:"2foru1", cat:"คอมโบเซ็ต", name:"2 For U", desc:"2×44oz + ป๊อปคอร์น 85oz", price:309, best:true, img:"img/2foru1.jpg"},
+  {id:"sausag1", cat:"คอมโบเซ็ต", name:"Sausage Combo", desc:"44oz + ป๊อปคอร์น 64oz + ไส้กรอก", price:269, best:false, img:"img/sausag1.jpg"},
+  {id:"extras1", cat:"คอมโบเซ็ต", name:"Extra Sausage Combo", desc:"44oz + ป๊อปคอร์น 85oz + ไส้กรอก 2", price:309, best:false, img:"img/extras1.jpg"},
+  {id:"minico1", cat:"คอมโบเซ็ต", name:"Minicocktail Combo", desc:"44oz + ป๊อปคอร์น 85oz + มินิค็อกเทล", price:309, best:false, img:"img/minico1.jpg"},
   {id:"softdr1", cat:"เครื่องดื่ม", name:"Soft Drink (Post-Mix)", desc:"น้ำอัดลมกด", price:85, best:true, img:IMG("Soft Drink (Post-Mix)"), options:[{lab:"ไซส์",choices:[{l:"32 oz",a:0},{l:"44 oz",a:10}]}]},
   {id:"cokesp1", cat:"เครื่องดื่ม", name:"Coke / Sprite / Fanta Can", desc:"กระป๋อง 325 ml", price:40, best:false, img:IMG("Coke / Sprite / Fanta Can"), options:[{lab:"เลือกชนิด",choices:[{l:"Coke",a:0},{l:"Sprite",a:0},{l:"Fanta",a:0}]}]},
   {id:"namthi1", cat:"เครื่องดื่ม", name:"Namthip Water", desc:"น้ำดื่ม 550 ml", price:25, best:false, img:IMG("Namthip Water")},
